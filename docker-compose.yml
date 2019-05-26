@@ -1,0 +1,42 @@
+version: "3.7"
+
+services:
+  elasticsearch:
+    build: ./elastisearch-sg-6
+    image: stanislavprihoda/elastic-sg-security 
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch-vol:/usr/share/elasticsearch/data 
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - elastic-network
+  kibana:
+    build: ./kibana-sg-6
+    image: stanislavprihoda/kibana-sg-security
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    volumes:
+      - ./kibana-sg-6/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./certificates/:/usr/share/kibana/config/certificates/
+    networks:
+      - elastic-network
+    depends_on:
+      - elasticsearch
+
+volumes:
+  elasticsearch-vol: 
+
+networks:
+  elastic-network:
+    name: elastic-network
